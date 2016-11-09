@@ -4,19 +4,55 @@
 }
 
 @Scripts.Render("~/bundles/jquery")
-<h2>EmployeeQuery</h2>
 
 <div class="container">
     <div class="row">
-        <div class="col-md-4 text-center">
+        <div class="col-md-12 text-center">
+            <h2>Query Employee Information</h2>
+            <h3>Below you can query various information about current employees.</h3>
+            <hr />
+        </div>
+    </div>
+    <div class="row add-margin-top">
+        <div style="border: 1px solid;" class="col-md-4 text-center">
             <h3>Queries</h3>
+
             <div class="col-md-12">
                 <span id="ViewAllEmployees" class="btn btn-primary">View Employees</span>
             </div>
+
             <div class="col-md-12">
                 <span id="ViewAllManagers" class="btn btn-primary add-margin-top">View Managers</span>
             </div>
+
+            <div class="col-md-12">
+                <span id="ViewEmployeesManagers" class="btn btn-primary add-margin-top">View Employee's Managers</span>
+            </div>
+
+            <div class="col-md-12">
+                <span id="ViewSpecificEmployee" class="btn btn-primary add-margin-top">View Specific Employee</span>
+            </div>
+            <div class="row col-md-12">
+                <form>
+                    <div class="form-group text-center col-md-11 col-md-offset-1">
+                        <input type="text" class="form-control add-margin-top" placeholder="First Name" id="specificEmployeeFirstName" />
+                        <input type="text" class="form-control add-margin-top" placeholder="Last Name" id="specificEmployeeLastName" />
+                    </div>
+                </form>     
+            </div>
+
+            <div class="col-md-12">
+                <span id="hiredAfter" class="btn btn-primary add-margin-top">View Employees Hired After</span>
+            </div>
+            <div class="row col-md-12">
+                <form>
+                    <div class="form-group text-center col-md-11 col-md-offset-1">
+                        <input type="date" class="form-control add-margin-top" id="hireDateInput" />
+                    </div>
+                </form>     
+            </div>
         </div>
+
 
 
         <div class="col-md-7 col-md-offset-1">
@@ -37,6 +73,55 @@
         var query = "SELECT m.employeeId, m.managerId, e.firstName, e.lastName FROM manager m, employee e WHERE m.employeeId = e.employeeId";
         selectQuery(query);
     })
+
+    $('#ViewEmployeesManagers').click(function () {
+        var query = "SELECT e1.firstName, e1.lastName, e1.employeeId, e2.firstName as mgrFirstName, e2.lastName as mgrLastName, mgr.managerId, mo.deptName FROM employee e1, manager mgr, employee e2, manages mgs, memberof mo WHERE e1.employeeId = mgs.employeeId AND mgs.managerId = mgr.managerId AND e2.employeeId = mgr.employeeId AND e1.employeeId = mo.employeeId";
+        selectQuery(query);
+    });
+
+    $('#ViewSpecificEmployee').click(function () {
+        var first = $('#specificEmployeeFirstName').val();
+        var last = $('#specificEmployeeLastName').val();
+
+        if (first == "" || last == "") {
+            alert("Please enter first and last name.");
+        }
+        else {
+            var query = "select e.firstName, e.lastName, e.employeeId, e.hireDate, e.salary, e.ssn, mo.deptName from employee e, memberof mo where e.firstName = + '"
+            query += first;
+            query += "' AND e.lastName = '" + last + "' and e.employeeId = mo.employeeId";
+            selectQuery(query);
+        }
+    });
+
+    $('#hiredAfter').click(function () {
+        var dateInputValue = getDate();
+        if (dateInputValue == -1) {
+            alert("error");
+            return;
+        }
+
+        var query = "SELECT * from employee WHERE hireDate >= '" + dateInputValue + "'";
+        console.log(query);
+        selectQuery(query);
+    });
+
+    function getDate() {
+        var date = new Date($('#hireDateInput').val());
+        var day = date.getDate() + 1;
+        if (date.getMonth() < 10) {
+            var month = '0' + date.getMonth() + 1;
+        }
+        else {
+            var month = date.getMonth() + 1;
+        }
+        var year = date.getFullYear();
+        if (isNaN(day) || isNaN(month) || isNaN(year)) {
+            return -1;
+        }
+        var selectedDate = [month, day, year].join('/');
+        return selectedDate;
+    }
 
     function selectQuery(query) {
         $('#data').html("");
