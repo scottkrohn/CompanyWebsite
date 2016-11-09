@@ -1,0 +1,81 @@
+﻿
+@{
+    ViewBag.Title = "EmployeeQuery";
+}
+
+@Scripts.Render("~/bundles/jquery")
+<h2>EmployeeQuery</h2>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4 text-center">
+            <h3>Queries</h3>
+            <div class="col-md-12">
+                <span id="ViewAllEmployees" class="btn btn-primary">View Employees</span>
+            </div>
+            <div class="col-md-12">
+                <span id="ViewAllManagers" class="btn btn-primary add-margin-top">View Managers</span>
+            </div>
+        </div>
+
+
+        <div class="col-md-7 col-md-offset-1">
+            <h3>Results</h3>
+            <div id="data"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Display all employees and all employee information.
+    $('#ViewAllEmployees').click(function () {
+        var query = 'SELECT * FROM employee';
+        selectQuery(query);
+    });
+
+    $('#ViewAllManagers').click(function () {
+        var query = "SELECT m.employeeId, m.managerId, e.firstName, e.lastName FROM manager m, employee e WHERE m.employeeId = e.employeeId";
+        selectQuery(query);
+    })
+
+    function selectQuery(query) {
+        $('#data').html("");
+        $.ajax({
+            url: "/Home/SelectQuery",
+            type: "GET",
+            datatype: "json",
+            data: { query: query },
+            success: function (data) {
+                var response = JSON.parse(data);
+                var headers = new Set();
+                $('#data').append('<table id="managerTable">');
+                $.each(response, function (index, element) {
+                    $('#data').append('<tr>');
+                    $.each(element, function (i, e) {
+                        $('#data').append('<td style="width: 110px;">' + e + '</td>');
+                        headers.add(i);
+                    });
+                    $('#data').append('</tr>');
+                });
+                $('#data').append('</table>');
+
+                // Create the header row in the table and insert at the top.
+                var headerString = '<tr>'
+                for (let header of headers) {
+                    headerString += '<th style="width: 110px">' + header + '</th>';
+                }
+                headerString += '</tr>';
+                console.log(headerString);
+                $('#managerTable').after(headerString);
+            },
+            error: function () {
+
+                alert("ERROR");
+            }
+        });
+    };
+
+
+</script>
+
+

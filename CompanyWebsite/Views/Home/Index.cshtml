@@ -1,0 +1,31 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<div class="container">
+    <div class="row">
+        <div id="titleSection" class="col-md-12 text-center">
+            <h2>Company Information System</h2>
+            <hr />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4  col-md-offset-2 text-center">
+           <a href="@Url.Action("SalesQuery", "Home")" class="btn btn-primary btn-lg">Query Sales Information</a>
+        </div>
+        <div class="col-md-4 text-center">
+           <a href="@Url.Action("EmployeeQuery", "Home")" class="btn btn-primary btn-lg">Query Employee Information</a>
+        </div>
+    </div>
+
+    <div class="row add-margin-top" >
+        <div class="col-md-4  col-md-offset-2 text-center">
+            <a href="@Url.Action("SalesUpdate", "Home")" class="btn btn-primary btn-lg">Update Sales Information</a>
+        </div>
+        <div class="col-md-4 text-center">
+           <a href="@Url.Action("EmployeeUpdate", "Home")" class="btn btn-primary btn-lg">Update Employee Information</a>
+        </div>
+    </div>
+
+</div>
