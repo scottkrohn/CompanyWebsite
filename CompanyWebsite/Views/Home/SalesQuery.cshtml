@@ -3,6 +3,39 @@
     ViewBag.Title = "QuerySales";
 }
 
-    @Scripts.Render("~/bundles/jquery")
-<h2>QuerySales</h2>
+@Scripts.Render("~/bundles/jquery")
+<script src="~/Scripts/QueryTemplates.js"></script>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <h2>Query Sales Information</h2>
+            <h3>Below you can query various information about sales and products.</h3>
+            <hr />
+        </div>
+    </div>
+
+    <div class="row">
+         <!-- QUERY DISPLAY SECTION -->
+        <div class="col-md-4" style="border: 1px solid;" id="queryDisplaySection">
+            <span class="btn btn-primary" id="viewAllEmployeeTotals">View Total Sales By Employee</span>
+        </div> <!-- END queryDisplaySection -->
+
+         <!-- RESULTS DISPLAY SECTION -->
+        <div class="col-md-7 col-md-offset-1" id="resultsDisplaySection">
+            <h3>Results</h3>
+            <div id="data"></div>
+        </div> <!-- END resultsDisplaySection -->
+
+    </div>
+</div>
+
+<script>
+    $('#viewAllEmployeeTotals').click(function () {
+        var query = "SELECT s.employeeId, SUM(p.price * ps.quantity) AS GrossSalesTotal FROM Salesman s, Initiates i, ProductSale ps, ContainsProd cp, Product p WHERE s.employeeId = i.employeeId AND i.id = ps.id AND ps.id = cp.id AND cp.sku = p.sku GROUP BY s.employeeId";
+        selectQuery(query);
+
+    });
+
+</script>
 

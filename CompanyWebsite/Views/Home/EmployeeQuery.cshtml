@@ -4,6 +4,7 @@
 }
 
 @Scripts.Render("~/bundles/jquery")
+<script src="~/Scripts/QueryTemplates.js"></script>
 
 <div class="container">
     <div class="row">
@@ -47,7 +48,14 @@
             <div class="row col-md-12">
                 <form>
                     <div class="form-group text-center col-md-11 col-md-offset-1">
-                        <input type="date" class="form-control add-margin-top" placeholder ="e.g. 10/31/1986" id="hireDateInput" />
+                        <!--<input type="date" class="form-control add-margin-top" placeholder ="e.g. 10/31/1986" id="hireDateInput" /> -->
+
+                        <input type="text" class="form-control add-margin-top" placeholder="Month" id="monthInput" style="width: 30%; display: inline"/>
+
+                        <input type="text" class="form-control add-margin-top" placeholder="Day" id="dayInput"style="width: 30%; display: inline;"/>
+
+                        <input type="text" class="form-control add-margin-top" placeholder="Year" id="yearInput"style="width: 30%; display: inline;"/>
+
                     </div>
                 </form>     
             </div>
@@ -108,7 +116,7 @@
     $('#hiredAfter').click(function () {
         var dateInputValue = getDate();
         if (dateInputValue == -1) {
-            alert("Invalid date format, use 00/00/0000")
+            alert("Invalid date format, use MM/DD/YYYY")
             return;
         }
 
@@ -120,69 +128,47 @@
     // TODO: implement this and the getSalary function, make text input for salary accept integers only
     //***************************************************************************
     $('#SalaryAbove').click(function () {
-        var query = "";
+        var salary = $('#salaryInput').val();
+        if (!checkIsNum(salary) || salary == "") {
+            alert("Invalid input for salary, please enter a number value.");
+        }
+        else {
+            query = "SELECT e.employeeId, e.firstName, e.lastName, e.salary FROM employee e WHERE e.salary >= " + salary + " order by e.salary";
+            selectQuery(query);
+        }
     });
 
-    function getSalary() {
-
+    function checkIsNum(value) {
+        if (isNaN(value)) {
+            return false;
+        }
+        return true;
     }
+
 
 V    // TODO: NEED TO TEST ON FIREFOX, GIVING INVALID DATA.
     function getDate() {
-        var date = new Date($('#hireDateInput').val());
-        var day = date.getDate() + 1;
-        if (date.getMonth() < 10) {
-            var month = '0' + date.getMonth() + 1;
-        }
-        else {
-            var month = date.getMonth() + 1;
-        }
-        var year = date.getFullYear();
-        if (isNaN(day) || isNaN(month) || isNaN(year)) {
+        var month = $('#monthInput').val();
+        var day = $('#dayInput').val();
+        var year = $('#yearInput').val();
+
+        // Check for invalid input.
+        if(isNaN(month) || isNaN(day) || isNaN(year) || day.length > 2 || month.length > 2 || year.length != 4){
             return -1;
         }
-        var selectedDate = [month, day, year].join('/');
+
+        // Add preceeding zero to values less than 10
+        if(month < 10){
+            month = '0' + month;
+        }
+        if(day < 10){
+            day = '0' + day;
+        }
+        
+        var selectedDate = [year, month, day].join('-');
+        console.log(selectedDate);
         return selectedDate;
     }
-
-    function selectQuery(query) {
-        $('#data').html("");
-        $.ajax({
-            url: "/Home/SelectQuery",
-            type: "GET",
-            datatype: "json",
-            data: { query: query },
-            success: function (data) {
-                var response = JSON.parse(data);
-                var headers = new Set();
-                $('#data').append('<table id="managerTable">');
-                $.each(response, function (index, element) {
-                    $('#data').append('<tr>');
-                    $.each(element, function (i, e) {
-                        $('#data').append('<td style="width: 110px;">' + e + '</td>');
-                        headers.add(i);
-                    });
-                    $('#data').append('</tr>');
-                });
-                $('#data').append('</table>');
-
-                // Create the header row in the table and insert at the top.
-                var headerString = '<tr>'
-                for (let header of headers) {
-                    headerString += '<th style="width: 110px">' + header + '</th>';
-                }
-                headerString += '</tr>';
-                console.log(headerString);
-                $('#managerTable').after(headerString);
-            },
-            error: function () {
-
-                alert("ERROR");
-            }
-        });
-    };
-
-
 </script>
 
 
