@@ -15,10 +15,28 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row add-margin-top">
          <!-- QUERY DISPLAY SECTION -->
-        <div class="col-md-4" style="border: 1px solid;" id="queryDisplaySection">
-            <span class="btn btn-primary" id="viewAllEmployeeTotals">View Total Sales By Employee</span>
+        <div class="col-md-4 text-center" style="border: 1px solid;" id="queryDisplaySection">
+            <h3>Queries</h3>
+            <div class="col-md-12">
+                <span class="btn btn-primary" id="viewAllEmployeeTotals">View Gross Sales - All Employees</span>
+            </div>
+            <div class="col-md-12">
+                <span class="btn btn-primary add-margin-top" id="viewSpecificEmployeeSales">View Gross Sales - Specific Employee</span>
+            </div>
+
+            <div class="row col-md-12">
+                <form>
+                    <div class="form-group text-center col-md-11 col-md-offset-1">
+                        <input type="text" class="form-control add-margin-top" placeholder="e.g 4" id="employeeIdGrossSales"/>
+                    </div> 
+                </form>
+            </div>
+            <div class="col-md-12">
+                <span class="btn btn-primary add-margin-top" id="viewSalesCountAllEmployees">View Number of Sales - All Employees</span>
+            </div>
+
         </div> <!-- END queryDisplaySection -->
 
          <!-- RESULTS DISPLAY SECTION -->
@@ -31,11 +49,41 @@
 </div>
 
 <script>
+    // Get a list of all the employees and their gross sales amount.
     $('#viewAllEmployeeTotals').click(function () {
-        var query = "SELECT s.employeeId, SUM(p.price * ps.quantity) AS GrossSalesTotal FROM Salesman s, Initiates i, ProductSale ps, ContainsProd cp, Product p WHERE s.employeeId = i.employeeId AND i.id = ps.id AND ps.id = cp.id AND cp.sku = p.sku GROUP BY s.employeeId";
+        var query = "SELECT s.employeeId, e.firstName, e.lastName, SUM(p.price * ps.quantity) AS GrossSalesTotal FROM Salesman s, Initiates i, ProductSale ps, ContainsProd cp, Product p, Employee e WHERE s.employeeId = i.employeeId AND e.employeeId = i.employeeId AND i.id = ps.id AND ps.id = cp.id AND cp.sku = p.sku GROUP BY s.employeeId";
         selectQuery(query);
-
     });
+
+    // Get the gross sales total for a specific employee.
+    $('#viewSpecificEmployeeSales').click(function () {
+        var rawInput = $('#employeeIdGrossSales').val();
+        var employeeId = getEmployeeID(rawInput);
+        if (employeeId == -1) {
+            alert("ERROR");
+            return;
+        }
+        var query = "SELECT e.firstName, e.lastName, SUM(p.price * ps.quantity) as GrossSales FROM Employee e, Salesman s, Initiates i, ProductSale ps, ContainsProd cp, Product p WHERE s.employeeId = i.employeeId AND e.employeeId = i.employeeId AND i.id = ps.id AND ps.id = cp.id AND cp.sku = p.sku AND s.employeeId = " + employeeId;
+        selectQuery(query);
+    });
+
+    $('#viewSalesCountAllEmployees').click(function () {
+        var query = "SELECT s.employeeId, e.firstName, e.lastName, Count(*) AS totalSales FROM Salesman s, Initiates i, ProductSale ps, Employee e WHERE s.employeeId = i.employeeId AND e.employeeId = i.employeeId AND i.id = ps.id GROUP BY s.employeeId";
+        selectQuery(query);
+    });
+
+
+
+    // Validate that ID is an integer. 
+    function getEmployeeID(id) {
+        // If it's not a number, is blank or not an integer, return -1
+        if (isNaN(id) || id == "" || Math.floor(id) != id) {
+            return -1;
+        }
+        // Input was an integer, return the id.
+        return id;
+    }
+
 
 </script>
 
