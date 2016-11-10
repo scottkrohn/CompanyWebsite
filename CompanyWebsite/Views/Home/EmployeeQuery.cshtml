@@ -47,7 +47,18 @@
             <div class="row col-md-12">
                 <form>
                     <div class="form-group text-center col-md-11 col-md-offset-1">
-                        <input type="date" class="form-control add-margin-top" id="hireDateInput" />
+                        <input type="date" class="form-control add-margin-top" placeholder ="e.g. 10/31/1986" id="hireDateInput" />
+                    </div>
+                </form>     
+            </div>
+
+            <div class="col-md-12">
+                <span id="SalaryAbove" class="btn btn-primary add-margin-top">View Employees With Salary Above</span>
+            </div>
+            <div class="row col-md-12">
+                <form>
+                    <div class="form-group text-center col-md-11 col-md-offset-1">
+                        <input type="text" class="form-control add-margin-top" placeholder ="e.g. 45000" id="salaryInput" />
                     </div>
                 </form>     
             </div>
@@ -97,7 +108,7 @@
     $('#hiredAfter').click(function () {
         var dateInputValue = getDate();
         if (dateInputValue == -1) {
-            alert("error");
+            alert("Invalid date format, use 00/00/0000")
             return;
         }
 
@@ -106,6 +117,17 @@
         selectQuery(query);
     });
 
+    // TODO: implement this and the getSalary function, make text input for salary accept integers only
+    //***************************************************************************
+    $('#SalaryAbove').click(function () {
+        var query = "";
+    });
+
+    function getSalary() {
+
+    }
+
+V    // TODO: NEED TO TEST ON FIREFOX, GIVING INVALID DATA.
     function getDate() {
         var date = new Date($('#hireDateInput').val());
         var day = date.getDate() + 1;
