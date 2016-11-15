@@ -145,7 +145,6 @@
     }
 
 
-V    // TODO: NEED TO TEST ON FIREFOX, GIVING INVALID DATA.
     function getDate() {
         var month = $('#monthInput').val();
         var day = $('#dayInput').val();
@@ -157,10 +156,10 @@ V    // TODO: NEED TO TEST ON FIREFOX, GIVING INVALID DATA.
         }
 
         // Add preceeding zero to values less than 10
-        if(month < 10){
+        if(month < 10 && month.charAt(0) != 0){
             month = '0' + month;
         }
-        if(day < 10){
+        if(day < 10 && day.charAt(0) != 0){
             day = '0' + day;
         }
         

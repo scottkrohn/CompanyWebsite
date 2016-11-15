@@ -37,6 +37,36 @@
                 <span class="btn btn-primary add-margin-top" id="viewSalesCountAllEmployees">View Number of Sales - All Employees</span>
             </div>
 
+            <div class="col-md-12">
+                <span id="salesBetweenDates" class="btn btn-primary add-margin-top">Sales Between Dates</span>
+            </div>
+            <div class="col-md-12 add-margin-top">
+                <form>
+                    <input type="checkbox"  id="specificSalesmanCheckbox" style="display: inline;"/> Single Empl.
+                    <input type="text" class="form-control" style="width: 40%; display: inline;" hidden placeholder="Employee ID e.g. 4" id="specificSalesmanID" />
+                </form>
+            </div>
+            
+            <div class="row col-md-12">
+                FROM:
+                <form>
+                    <div class="form-group text-center col-md-11 col-md-offset-1">
+                        <input type="text" class="form-control add-margin-top" placeholder="Month" id="fromMonthInput" style="width: 30%; display: inline"/>
+                        <input type="text" class="form-control add-margin-top" placeholder="Day" id="fromDayInput"style="width: 30%; display: inline;"/>
+                        <input type="text" class="form-control add-margin-top" placeholder="Year" id="fromYearInput"style="width: 30%; display: inline;"/>
+                    </div>
+                </form>     
+            </div>
+            <div class="row col-md-12">
+                TO:
+                <form>
+                    <div class="form-group text-center col-md-11 col-md-offset-1">
+                        <input type="text" class="form-control add-margin-top" placeholder="Month" id="toMonthInput" style="width: 30%; display: inline"/>
+                        <input type="text" class="form-control add-margin-top" placeholder="Day" id="toDayInput"style="width: 30%; display: inline;"/>
+                        <input type="text" class="form-control add-margin-top" placeholder="Year" id="toYearInput"style="width: 30%; display: inline;"/>
+                    </div>
+                </form>     
+            </div>
         </div> <!-- END queryDisplaySection -->
 
          <!-- RESULTS DISPLAY SECTION -->
@@ -49,6 +79,21 @@
 </div>
 
 <script>
+
+    $(document).ready(function () {
+            $('#specificSalesmanID').hide();
+            $('#specificSalesmanCheckbox').checked = false;
+    });
+
+    $('#specificSalesmanCheckbox').change(function () {
+        if ($(this).is(':checked')) {
+            $('#specificSalesmanID').show();
+        }
+        else {
+            $('#specificSalesmanID').hide();
+        }
+    });
+
     // Get a list of all the employees and their gross sales amount.
     $('#viewAllEmployeeTotals').click(function () {
         var query = "SELECT s.employeeId, e.firstName, e.lastName, SUM(p.price * ps.quantity) AS GrossSalesTotal FROM Salesman s, Initiates i, ProductSale ps, ContainsProd cp, Product p, Employee e WHERE s.employeeId = i.employeeId AND e.employeeId = i.employeeId AND i.id = ps.id AND ps.id = cp.id AND cp.sku = p.sku GROUP BY s.employeeId";
@@ -67,11 +112,64 @@
         selectQuery(query);
     });
 
+    // Display the total number of sales for each employee.
     $('#viewSalesCountAllEmployees').click(function () {
         var query = "SELECT s.employeeId, e.firstName, e.lastName, Count(*) AS totalSales FROM Salesman s, Initiates i, ProductSale ps, Employee e WHERE s.employeeId = i.employeeId AND e.employeeId = i.employeeId AND i.id = ps.id GROUP BY s.employeeId";
         selectQuery(query);
     });
 
+    $('#salesBetweenDates').click(function () {
+        // Get the date range
+        var fromDate = getDate('#fromMonthInput', '#fromDayInput', '#fromYearInput');
+        var toDate = getDate('#toMonthInput', '#toDayInput', '#toYearInput');
+        if (fromDate == -1 || toDate == -1) {
+            alert("Invalid input for dates, use format MM/DD/YYY");
+            return;
+        }
+
+        // Check if this is for all employees or specific employee.
+        if ($('#specificSalesmanCheckbox').is(':checked')) {
+            var employeeId = $('#specificSalesmanID').val();
+            if (!checkIsNum(employeeId)) {
+                alert("Invalid input for employeeID, must be an integer.");
+                return;
+            }
+            var query = "SELECT e.employeeId, e.firstName, e.lastName, SUM(p.price * ps.quantity) AS totalSales FROM Salesman s, Initiates i, ProductSale ps, ContainsProd cp, Product p, Employee e WHERE s.employeeId = i.employeeId AND e.employeeID = i.employeeId AND i.id = ps.id AND ps.id = cp.id AND cp.sku = p.sku AND s.employeeId = " + employeeId + " AND i.dt between '" + fromDate + "' AND '" + toDate + "'";
+            selectQuery(query);
+        }
+        else {
+        }
+    });
+
+    function checkIsNum(value) {
+        if (isNaN(value)) {
+            return false;
+        }
+        return true;
+    }
+
+    function getDate(monthField, dayField, yearField) {
+        var month = $(monthField).val();
+        var day = $(dayField).val();
+        var year = $(yearField).val();
+
+        // Check for invalid input.
+        if(isNaN(month) || isNaN(day) || isNaN(year) || day.length > 2 || month.length > 2 || year.length != 4){
+            return -1;
+        }
+
+        // Add preceeding zero to values less than 10
+        if(month < 10 && month.charAt(0) != 0){
+            month = '0' + month;
+        }
+        if(day < 10 && day.charAt(0) != 0){
+            day = '0' + day;
+        }
+        
+        var selectedDate = [year, month, day].join('-');
+        console.log(selectedDate);
+        return selectedDate;
+    }
 
 
     // Validate that ID is an integer. 
