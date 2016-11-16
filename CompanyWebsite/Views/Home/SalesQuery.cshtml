@@ -19,13 +19,18 @@
          <!-- QUERY DISPLAY SECTION -->
         <div class="col-md-4 text-center" style="border: 1px solid;" id="queryDisplaySection">
             <h3>Queries</h3>
+
+            <!-- VIEW ALL GROSS SALES QUERY-->
             <div class="col-md-12">
                 <span class="btn btn-primary" id="viewAllEmployeeTotals">View Gross Sales - All Employees</span>
             </div>
+
+            <!-- VIEW SPECIFIC EMPLOYEE SALES QUERY-->
             <div class="col-md-12">
                 <span class="btn btn-primary add-margin-top" id="viewSpecificEmployeeSales">View Gross Sales - Specific Employee</span>
             </div>
 
+            <!-- EMPLOYEE ID INPUT BOX -->
             <div class="row col-md-12">
                 <form>
                     <div class="form-group text-center col-md-11 col-md-offset-1">
@@ -33,12 +38,15 @@
                     </div> 
                 </form>
             </div>
+
+            <!-- VIEW ALL EMPLOYEES QUERY-->
             <div class="col-md-12">
                 <span class="btn btn-primary add-margin-top" id="viewSalesCountAllEmployees">View Number of Sales - All Employees</span>
             </div>
 
+            <!-- VIEW ALL SALES BETWEEN DATES QUERY-->
             <div class="col-md-12">
-                <span id="salesBetweenDates" class="btn btn-primary add-margin-top">Sales Between Dates</span>
+                <span id="salesBetweenDates" class="btn btn-primary add-margin-top">Total Gross Sales - Between Dates</span>
             </div>
             <div class="col-md-12 add-margin-top">
                 <form>
@@ -46,35 +54,42 @@
                     <input type="text" class="form-control" style="width: 40%; display: inline;" hidden placeholder="Employee ID e.g. 4" id="specificSalesmanID" />
                 </form>
             </div>
-            
-            <div class="row col-md-12">
-                FROM:
-                <form>
-                    <div class="form-group text-center col-md-11 col-md-offset-1">
-                        <input type="text" class="form-control add-margin-top" placeholder="Month" id="fromMonthInput" style="width: 30%; display: inline"/>
-                        <input type="text" class="form-control add-margin-top" placeholder="Day" id="fromDayInput"style="width: 30%; display: inline;"/>
-                        <input type="text" class="form-control add-margin-top" placeholder="Year" id="fromYearInput"style="width: 30%; display: inline;"/>
-                    </div>
-                </form>     
+
+            <!-- VIEW TOP SALESMAN QUERY-->
+            <div class="col-md-12">
+                <span class="btn btn-primary add-margin-top" id="topSalesmanButton">View Top Salesman - Between Dates</span>
             </div>
-            <div class="row col-md-12">
-                TO:
-                <form>
-                    <div class="form-group text-center col-md-11 col-md-offset-1">
-                        <input type="text" class="form-control add-margin-top" placeholder="Month" id="toMonthInput" style="width: 30%; display: inline"/>
-                        <input type="text" class="form-control add-margin-top" placeholder="Day" id="toDayInput"style="width: 30%; display: inline;"/>
-                        <input type="text" class="form-control add-margin-top" placeholder="Year" id="toYearInput"style="width: 30%; display: inline;"/>
-                    </div>
-                </form>     
-            </div>
+        
+        <!-- ADD MORE QUERIES? BEST SELLING PRODUCT, LIST ALL PRODUCTS, LIST COST OF PRODUCTS ETC-->
+           <br /> 
         </div> <!-- END queryDisplaySection -->
 
-         <!-- RESULTS DISPLAY SECTION -->
+        <!-- RIGHT Section-->
         <div class="col-md-7 col-md-offset-1" id="resultsDisplaySection">
-            <h3>Results</h3>
-            <div id="data"></div>
-        </div> <!-- END resultsDisplaySection -->
+        <div class="row">
+            <div class="col-md-12 text-center" style="border:1px solid;">
+                <form>
+                    <div class="form-group text-center col-md-12">
+                        <strong>FROM:</strong>
+                        <input type="text" class="form-control add-margin-top" placeholder="Month" id="fromMonthInput" style="width: 12%; display: inline"/>
+                        <input type="text" class="form-control add-margin-top" placeholder="Day" id="fromDayInput"style="width: 12%; display: inline;"/>
+                        <input type="text" class="form-control add-margin-top" placeholder="Year" id="fromYearInput"style="width: 16%; display: inline;"/>
+                        <strong>  TO:</strong>
+                        <input type="text" class="form-control add-margin-top" placeholder="Month" id="toMonthInput" style="width: 12%; display: inline"/>
+                        <input type="text" class="form-control add-margin-top" placeholder="Day" id="toDayInput"style="width: 12%; display: inline;"/>
+                        <input type="text" class="form-control add-margin-top" placeholder="Year" id="toYearInput"style="width: 16%; display: inline;"/>
+                    </div>
+                </form>
+            </div>
+        </div> 
 
+         <!-- RESULTS DISPLAY SECTION -->
+            <div class="row add-margin-top">
+                <div class="col-md-12" style="border: 1px solid;">
+                    <h3>Results</h3>
+                    <div id="data"></div>
+                </div>
+            </div><!-- END RESULTS DISPLAY SECTION-->
     </div>
 </div>
 
@@ -105,7 +120,7 @@
         var rawInput = $('#employeeIdGrossSales').val();
         var employeeId = getEmployeeID(rawInput);
         if (employeeId == -1) {
-            alert("ERROR");
+            alert("Invalid input for employeeID, must be an integer.");
             return;
         }
         var query = "SELECT e.firstName, e.lastName, SUM(p.price * ps.quantity) as GrossSales FROM Employee e, Salesman s, Initiates i, ProductSale ps, ContainsProd cp, Product p WHERE s.employeeId = i.employeeId AND e.employeeId = i.employeeId AND i.id = ps.id AND ps.id = cp.id AND cp.sku = p.sku AND s.employeeId = " + employeeId;
@@ -130,7 +145,7 @@
         // Check if this is for all employees or specific employee.
         if ($('#specificSalesmanCheckbox').is(':checked')) {
             var employeeId = $('#specificSalesmanID').val();
-            if (!checkIsNum(employeeId)) {
+            if (!checkIsNum(employeeId) || employeeId == "") {
                 alert("Invalid input for employeeID, must be an integer.");
                 return;
             }
@@ -138,9 +153,23 @@
             selectQuery(query);
         }
         else {
+            var query = "SELECT s.employeeId, e.firstName, e.lastName, SUM(p.price * ps.quantity) AS totalSalesDollers FROM Salesman s, Initiates i, ProductSale ps, ContainsProd cp, Product p, Employee e WHERE s.employeeId = i.employeeId AND e.employeeId = i.employeeId AND i.id = ps.id AND ps.id = cp.id AND cp.sku = p.sku AND i.dt between '" + fromDate + "' AND '" + toDate + "' GROUP BY s.employeeId";
+            selectQuery(query);
         }
     });
 
+    $('#topSalesmanButton').click(function () {
+        var fromDate = getDate('#fromMonthInput', '#fromDayInput', '#fromYearInput');
+        var toDate = getDate('#toMonthInput', '#toDayInput', '#toYearInput');
+        if (fromDate == -1 || toDate == -1) {
+            alert("Invalid input for dates, use format MM/DD/YYY");
+            return;
+        }
+        var query = "SELECT s.employeeId, e.firstName, e.lastName, SUM(p.price * ps.quantity) AS totalSalesDollers FROM Salesman s, Initiates i, ProductSale ps, ContainsProd cp, Product p, Employee e WHERE s.employeeId = i.employeeId AND e.employeeId = i.employeeId AND i.id = ps.id AND ps.id = cp.id AND cp.sku = p.sku AND i.dt BETWEEN '" + fromDate + "' AND '" + toDate + "' GROUP BY s.employeeId ORDER BY SUM(p.price * ps.quantity) desc limit 1"
+        selectQuery(query);
+    });
+
+    // Check if input is a number
     function checkIsNum(value) {
         if (isNaN(value)) {
             return false;
@@ -148,6 +177,7 @@
         return true;
     }
 
+    // Given 3 input fields, construct a date string matching the SQL format.
     function getDate(monthField, dayField, yearField) {
         var month = $(monthField).val();
         var day = $(dayField).val();
