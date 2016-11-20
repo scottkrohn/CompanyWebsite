@@ -3,5 +3,206 @@
     ViewBag.Title = "SalesUpdate";
 }
 
-<h2>SalesUpdate</h2>
+@Scripts.Render("~/bundles/jquery")
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <h2>Add Product Sale</h2>
+            <h3>Below you can add a new product sale.</h3>
+            <hr />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3 text-center" style="border: 1px solid;">
+            <input type="text" id="idBox" style="display: none;" />
+            <div class="form-group">
+                <label for="employeeSelect">Sold By:</label>
+                <select id="employeeSelect" class="form-control" style="display: block; margin: 0 auto;"></select>
+            </div>
+            <div class="form-group">
+                <label for="productSelect">Product Sold</label>
+                <select id="productSelect" class="form-control" style="display: block; margin: 0 auto;"></select>
+            </div>
+            <div class="form-group">
+                <label for="quantityBox">Quantity Sold:</label>
+                <input type="text" class="form-control" id="quantityBox"style=" display: block; margin: 0 auto;"/>
+            </div>
+            <div class="form-group">
+                <label for="monthInput">Sale Date:</label><br />
+                <input type="text" class="form-control add-margin-top" placeholder="Month" id="monthInput" style="width: 20%; display: inline"/>
+                <input type="text" class="form-control add-margin-top" placeholder="Day" id="dayInput"style="width: 20%; display: inline;"/>
+                <input type="text" class="form-control add-margin-top" placeholder="Year" id="yearInput"style="width: 43%; display: inline;"/>
+            </div>
+            <span class="btn btn-primary add-margin-top" id="submitButton" style="margin-bottom: 10px;">Submit</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        loadEmployees();
+        loadProducts();
+        getNextProductSaleId();
+    });
+
+    // Query the database for all current employees to display a list of employee to delete
+    function loadEmployees() {
+        $('#employeeSelect').html("");
+        var query = "SELECT e.employeeId, e.firstName, e.lastName FROM employee e WHERE e.employeeId NOT IN (SELECT m.employeeId FROM manager m, employee e2 WHERE m.employeeId = e2.employeeId)";
+        $.ajax({
+            url: "/Home/SelectQuery",
+            type: "GET",
+            datatype: "json",
+            data: { query: query },
+            success: function (data) {
+                var response = JSON.parse(data);
+                $.each(response, function (index, element) {
+                    var employeeId = response[index]['employeeId'];
+                    var firstName = response[index]['firstName'];
+                    var lastName = response[index]['lastName'];
+                    var option = new Option(firstName + " " + lastName, employeeId);
+                    $('#employeeSelect').append($(option));
+                })
+            },
+            error: function (err) {
+
+            }
+        });
+    }
+
+    function loadProducts() {
+        $('#productSelect').html("");
+        var query = "SELECT sku, name, price, prodFlag FROM product"
+
+        $.ajax({
+            url: "/Home/SelectQuery",
+            type: "GET",
+            datatype: "json",
+            data: { query: query },
+            success: function (data) {
+                var response = JSON.parse(data);
+                $.each(response, function (index, element) {
+                    var productName = response[index]['name'];
+                    var sku = response[index]['sku'];
+                    var optionName = "SKU " + sku + ":" + productName;
+                    var option = new Option(optionName, sku);
+                    $('#productSelect').append($(option));
+                });
+            },
+            error: function (err) {
+
+            }
+        });
+    };
+
+        // Check if input is a valid integer 
+        function isInt(value) {
+             return !isNaN(value) && 
+             parseInt(Number(value)) == value && 
+             !isNaN(parseInt(value, 10));
+        }
+
+        // Given 3 input fields, construct a date string matching the SQL format.
+        function getDate(monthField, dayField, yearField) {
+            var month = $(monthField).val();
+            var day = $(dayField).val();
+            var year = $(yearField).val();
+
+            // Check for invalid input.
+            if (isNaN(month) || isNaN(day) || isNaN(year) || day.length > 2 || month.length > 2 || year.length != 4) {
+                return -1;
+            }
+
+            // Add preceeding zero to values less than 10
+            if (month < 10 && month.charAt(0) != 0) {
+                month = '0' + month;
+            }
+            if (day < 10 && day.charAt(0) != 0) {
+                day = '0' + day;
+            }
+
+            var selectedDate = [year, month, day].join('-');
+            console.log(selectedDate);
+            return selectedDate;
+        };
+
+        function validateInput(quantity, date){
+        if (!isInt(quantity)) {
+                alert("Invalid input for quantity, please enter an integer.");
+                return false;
+            }
+            if (date == -1) {
+                alert("Invalid input for Sale Date, use format MM/DD/YYYY");
+                return false;
+            }
+            return true;
+        }
+
+        // Query database to find unused ID when adding a new Employee
+        function getNextProductSaleId() {
+            var query = "SELECT (MAX(p.id) + 1) as nextId FROM productsale p";
+            var nextId;
+            $.ajax({
+                url: "/Home/SelectQuery",
+                type: "GET",
+                datatype: "json",
+                data: { query: query },
+                success: function (data) {
+                    var result = JSON.parse(data);
+                    $('#idBox').attr('value', result[0]['nextId']);
+                },
+                error: function (err) {
+
+                }
+            });
+        };
+
+        function clearInputs() {
+            $('#quantityBox').val("");
+            $('#monthInput').val("");
+            $('#dayInput').val("");
+            $('#yearInput').val("");
+        }
+
+
+        $('#submitButton').click(function () {
+            var productSaleId = $('#idBox').attr('value');
+            console.log(productSaleId);
+            var employeeId = $('#employeeSelect option:selected').val();
+            var sku = $('#productSelect option:selected').val();
+            var quantitySold = $('#quantityBox').val();
+            var date = getDate('#monthInput', '#dayInput', '#yearInput');
+            if (!validateInput(quantitySold, date)) {
+                return;
+            }
+
+            var insertProductSaleQuery = "INSERT INTO productsale(id, quantity) values (" + productSaleId + ", " + quantitySold + ");";
+            var insertInitiatesQuery = "INSERT INTO initiates(dt, employeeId, id) values ('" + date + "', " + employeeId + ", " + productSaleId + ");";
+            var insertContainsProductQuery = "INSERT INTO containsprod(sku, id) values (" + sku + ", " + productSaleId + ");";
+            var query = insertProductSaleQuery + " " + insertInitiatesQuery + " " + insertContainsProductQuery;
+            
+            $.ajax({
+                url: "/Home/InsertQuery",
+                type: "POST",
+                datatype: "json",
+                data: { query: query },
+                success: function (data) {
+                    if (data['result']) {
+                        alert("Product sale added!");
+                        getNextProductSaleId();
+                        clearInputs();
+                    }
+                    else {
+                        alert("Error adding product sale, please try again.")
+                    }
+                },
+                error: function(err){
+                    alert("Error adding product sale, please try again.")
+                }
+            });
+
+
+        });
+</script>
 

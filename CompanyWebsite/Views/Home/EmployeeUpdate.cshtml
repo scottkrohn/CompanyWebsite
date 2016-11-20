@@ -21,7 +21,7 @@
             </div>
             <div class="col-md-12 text-center">
                 <span id="addEmployeeButton" class="btn btn-primary">Add Employee</span>
-                <span id="deleteEmployeeButton" class="btn btn-primary add-margin-top ">Delete Employee</span>
+                <span id="deleteEmployeeButton" class="btn btn-primary add-margin-top" style="margin-bottom: 20px;">Delete Employee</span>
             </div>
         </div>
 
@@ -242,19 +242,24 @@
     function validateInput(employeeId, hireDate, firstName, lastName, ssn, salary){
         if (hireDate == -1) {
             alert("Invalid date format, use MM/DD/YYY");
+            return false;
         }
 
         if(firstName == "" || lastName == ""){
             alert("Invalid input for name, no blank inputs allowed.")
+            return false;
         }
 
         if(!isNumber(salary)){
             alert("Invalid input for salary, please enter a number.")
+            return false;
         }
 
         if(!isNumber(ssn) || ssn.length != 9){
             alert("Invalid input for SSN, please enter a 9 digit SSN with format #########")
+            return false;
         }
+        return true;
     }
 
     $('#addEmployeeSubmit').click(function () {
@@ -269,7 +274,9 @@
         var region = $('#regionSelect option:selected').text();
         var employeeId = $('#idBox').attr('value');
         // Validate input
-        validateInput(employeeId, date, firstName, lastName, ssn, salary);
+        if (!validateInput(employeeId, date, firstName, lastName, ssn, salary)) {
+            return;
+        }
         
         // Construct query
         var insertEmployeeQuery = "insert into employee (employeeId, hireDate, firstName, lastName, ssn, salary) values (" + employeeId + ", '" + date + "', '" + firstName + "', '" + lastName + "', " + ssn + ", " + salary + ");";
@@ -317,7 +324,7 @@
                 }
             },
             error: function (err) {
-                alsert("ERROR");
+                alert("ERROR");
             }
         });
     });
