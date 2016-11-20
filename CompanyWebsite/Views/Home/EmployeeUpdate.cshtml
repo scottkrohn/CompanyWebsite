@@ -3,5 +3,256 @@
     ViewBag.Title = "EmployeeUpdate";
 }
 
-<h2>EmployeeUpdate</h2>
+@Scripts.Render("~/bundles/jquery")
 
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <h2>Add/Delete Employees</h2>
+            <h3>Below you can add or remove employees from the database.</h3>
+            <hr />
+        </div>
+    </div>
+    <div class="row">
+
+        <div class="col-md-4" style="border: 1px solid;">
+            <div class="col-md-12 text-center">
+                <h3>Operations</h3>
+            </div>
+            <div class="col-md-12 text-center">
+                <span id="addEmployeeButton" class="btn btn-primary">Add Employee</span>
+                <span id="deleteEmployeeButton" class="btn btn-primary add-margin-top ">Delete Employee</span>
+            </div>
+        </div>
+
+        <div class="col-md-8" style="border: 1px solid;">
+            <div class="col-md-6 col-md-offset-3" id="addEmployeeForm">
+                <!-- Employee needs to be in:
+                    Employee
+                    Manages
+                    memberOf
+                    -->
+
+                <form>
+                    <div class="form-group">
+                        <label for="newEmployeeNameBox">Employee Name:</label><br />
+                        <input type="text" class="form-control" id="firstNameBox" placeholder="First Name" style="display: inline; width: 40%;" />
+                        <input type="text" class="form-control" id="lastNameBox" placeholder="Last Name" style="display: inline; width: 40%;"/>
+                    </div>
+                    <div id="form-group">
+                        <input type="text" id="idBox" class="form-control" style="display: none;"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="ssnBox">Employee's SSN</label>
+                        <input type="text" id="ssnBox" placeholder="Format #########"class="form-control"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="salaryBox">Employee's Salary</label>
+                        <input type="text" id="salaryBox" class="form-control"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="managerSelect">Employee's Manager:</label>
+                        <select id="managerSelect" class="form-control"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="departmentSelect">Employee's Department:</label>
+                        <select id="departmentSelect" class="form-control"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="regionSelect">Employee's Region:</label>
+                        <select id="regionSelect" class="form-control">
+                            <option value="USA">USA</option>
+                            <option value="CANADA">Canada</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="monthInput">Employee's Hire Date:</label><br />
+                        <input type="text" class="form-control add-margin-top" placeholder="Month" id="monthInput" style="width: 20%; display: inline"/>
+                        <input type="text" class="form-control add-margin-top" placeholder="Day" id="dayInput"style="width: 20%; display: inline;"/>
+                        <input type="text" class="form-control add-margin-top" placeholder="Year" id="yearInput"style="width: 43%; display: inline;"/>
+                    </div>
+                    <span id="addEmployeeSubmit" class="btn btn-primary add-margin-top">Submit</span>
+                </form>
+            </div>
+            <div class="col-md-12" id="deleteEmployeeForm">
+                Delete Form
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#deleteEmployeeForm').hide();
+        loadManagers();
+        loadDepartments();
+        getNextEmployeeId();
+    });
+
+    $('#addEmployeeButton').click(function () {
+        $('#deleteEmployeeForm').hide();
+        $('#addEmployeeForm').show();
+    });
+
+    $('#deleteEmployeeButton').click(function () {
+        $('#addEmployeeForm').hide();
+        $('#deleteEmployeeForm').show();
+    });
+
+    function loadManagers() {
+        var query = "SELECT mgr.managerId, e.firstName, e.lastName FROM Manager mgr, Employee e WHERE mgr.employeeId = e.employeeId";
+        // Ajax call to query database for all the manager information.
+        $.ajax({
+            url: "/Home/SelectQuery",
+            type: "GET",
+            datatype: "json",
+            data: {query: query},
+            success: function(data){
+                var response = JSON.parse(data);
+                // Display the result of the query as option in a select drop down.
+                $.each(response, function (index, element) {
+                    var managerName = response[index]['firstName'] + " " + response[index]['lastName'];
+                    var managerId = response[index]['managerId'];
+                    var option = new Option(managerName, managerId);
+                    $('#managerSelect').append($(option));
+                });
+            },
+            error: function (error) {
+                console.log(error.statusText);
+            }
+        });
+    };
+    
+    function loadDepartments() {
+        var query = "SELECT dept.deptName, dept.deptNum FROM salesdepartment dept";
+        $.ajax({
+            url: "/Home/SelectQuery",
+            type: "GET",
+            datatype: "json",
+            data: { query: query },
+            success: function (data) {
+                var response = JSON.parse(data);
+                $.each(response, function (index, element) {
+                    var departmentName = response[index]['deptName'];
+                    var departmentNum= response[index]['deptNum'];
+                    var option = new Option(departmentName, departmentNum);
+                    $('#departmentSelect').append($(option));
+                })
+            },
+            error: function (err) {
+                console.log(error.statusText);
+            }
+        });
+    };
+
+    function getNextEmployeeId() {
+        var query = "SELECT (MAX(e.employeeId) + 1) as nextId FROM employee e";
+        var nextId;
+        $.ajax({
+            url: "/Home/SelectQuery",
+            type: "GET",
+            datatype: "json",
+            data: { query: query },
+            success: function (data) {
+                var result = JSON.parse(data);
+                $('#idBox').attr('value', result[0]['nextId']);
+            },
+            error: function (err) {
+
+            }
+        });
+    }
+
+    // Given 3 input fields, construct a date string matching the SQL format.
+    function getDate(monthField, dayField, yearField) {
+        var month = $(monthField).val();
+        var day = $(dayField).val();
+        var year = $(yearField).val();
+
+        // Check for invalid input.
+        if (isNaN(month) || isNaN(day) || isNaN(year) || day.length > 2 || month.length > 2 || year.length != 4) {
+            return -1;
+        }
+
+        // Add preceeding zero to values less than 10
+        if (month < 10 && month.charAt(0) != 0) {
+            month = '0' + month;
+        }
+        if (day < 10 && day.charAt(0) != 0) {
+            day = '0' + day;
+        }
+
+        var selectedDate = [year, month, day].join('-');
+        console.log(selectedDate);
+        return selectedDate;
+    };
+
+    function isNumber(input) {
+        if (isNaN(input) || input == "") {
+            return false;
+        }
+        return true;
+    }
+
+    function validateInput(employeeId, hireDate, firstName, lastName, ssn, salary){
+        if (hireDate == -1) {
+            alert("Invalid date format, use MM/DD/YYY");
+        }
+
+        if(firstName == "" || lastName == ""){
+            alert("Invalid input for name, no blank inputs allowed.")
+        }
+
+        if(!isNumber(salary)){
+            alert("Invalid input for salary, please enter a number.")
+        }
+
+        if(!isNumber(ssn) || ssn.length != 9){
+            alert("Invalid input for SSN, please enter a 9 digit SSN with format #########")
+        }
+    }
+
+    $('#addEmployeeSubmit').click(function () {
+
+        var date = getDate('#monthInput', '#dayInput', '#yearInput');
+        var salary = $('#salaryBox').val();
+        var ssn = $('#ssnBox').val();
+        var firstName = $('#firstNameBox').val();
+        var lastName = $('#lastNameBox').val();
+        var managerId = $('#managerSelect option:selected').val();
+        var deptName = $('#departmentSelect option:selected').text();
+        var region = $('#regionSelect option:selected').text();
+        var employeeId = $('#idBox').attr('value');
+        console.log(employeeId);
+        validateInput(employeeId, date, firstName, lastName, ssn, salary);
+        
+        var insertEmployeeQuery = "insert into employee (employeeId, hireDate, firstName, lastName, ssn, salary) values (" + employeeId + ", '" + date + "', '" + firstName + "', '" + lastName + "', " + ssn + ", " + salary + ");";
+        console.log(insertEmployeeQuery);
+
+        var insertManagesQuery = "insert into manages(managerId, employeeId) values (" + managerId + ", " + employeeId + ");";
+        console.log(insertManagesQuery);
+
+        var insertMemberOfQuery = "insert into memberof(employeeId, deptName) values (" + employeeId + ", '" + deptName + "');";
+
+        var query = insertEmployeeQuery + " " + insertManagesQuery + " " + insertMemberOfQuery;
+
+        $.ajax({
+            url: "/Home/InsertQuery",
+            type: "POST",
+            datatype: "json",
+            data: { query, query },
+            success: function (data) {
+                if (data['result']) {
+                    console.log("Added!");
+                }
+                else {
+                    console.log("Callback success, but not added.");
+                }
+            },
+            error: function (err) {
+                console.log("Not added!");
+            }
+        });
+    });
+</script>

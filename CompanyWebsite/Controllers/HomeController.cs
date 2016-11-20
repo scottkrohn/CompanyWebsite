@@ -45,5 +45,14 @@ namespace CompanyWebsite.Controllers {
 			}
 			return Json(serializer.Serialize(rows), JsonRequestBehavior.AllowGet);
 		}
+
+        [HttpPost]
+        public JsonResult InsertQuery(string query) {
+            bool result = false;
+            if(Models.DatabaseAccess.InsertQuery(query)) {
+                result = true;
+            }
+            return Json(new {result=result});
+        }
 	}
 }
