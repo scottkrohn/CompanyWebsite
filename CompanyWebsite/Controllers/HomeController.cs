@@ -54,5 +54,15 @@ namespace CompanyWebsite.Controllers {
             }
             return Json(new {result=result});
         }
+
+        [HttpPost]
+        public JsonResult DeleteQuery(string query)
+        {
+            bool result = false;
+            if(Models.DatabaseAccess.DeleteQuery(query)){
+                result = true;
+            }
+            return Json(new {result=result});
+        }
 	}
 }

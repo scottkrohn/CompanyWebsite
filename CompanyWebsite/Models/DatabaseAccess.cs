@@ -50,5 +50,30 @@ namespace CompanyWebsite.Models {
             }
             return true;
         }
+
+        public static bool DeleteQuery(string query)
+        {
+            try
+            {
+                string connString = ConfigurationManager.ConnectionStrings["mysqlconnection"].ConnectionString;
+                using(MySqlConnection conn = new MySqlConnection(connString)) {
+                    using(MySqlCommand cmd = new MySqlCommand(query)) {
+                        conn.Open();
+                        cmd.Connection = conn;
+                        cmd.CommandText = query;
+                        int rowsAffected = cmd.ExecuteNonQuery();
+                        if(rowsAffected == 0)
+                        {
+                            throw new Exception("Delete dailed.");
+                        }
+                    } 
+                }
+            }
+            catch(Exception ex)
+            {
+                return false;
+            }
+            return true;
+        }
 	}
 }

@@ -5,7 +5,6 @@
 
 @Scripts.Render("~/bundles/jquery")
 
-
 <div class="container">
     <div class="row">
         <div class="col-md-12 text-center">
@@ -27,13 +26,8 @@
         </div>
 
         <div class="col-md-8" style="border: 1px solid;">
+            <!-- Add Employee Form -->
             <div class="col-md-6 col-md-offset-3" id="addEmployeeForm">
-                <!-- Employee needs to be in:
-                    Employee
-                    Manages
-                    memberOf
-                    -->
-
                 <form>
                     <div class="form-group">
                         <label for="newEmployeeNameBox">Employee Name:</label><br />
@@ -74,10 +68,19 @@
                     </div>
                     <span id="addEmployeeSubmit" class="btn btn-primary add-margin-top">Submit</span>
                 </form>
-            </div>
-            <div class="col-md-12" id="deleteEmployeeForm">
-                Delete Form
-            </div>
+            </div><!-- END Add Employee Form -->
+
+            <!-- Delete Employee Form -->
+            <div class="col-md-6 col-md-offset-3" id="deleteEmployeeForm">
+                <div class="form-group">
+                    <label for="employeeSelect">Select Employee To Delete:</label>
+                    <select id="employeeSelect" class="form-control"></select>
+                </div>
+                <span id="deleteEmployeeSubmit" class="btn btn-primary add-margin-top">Submit</span>
+            </div> <!-- END Delete Employee Form -->
+        </div> 
+
+
         </div>
     </div>
 </div>
@@ -88,6 +91,7 @@
         loadManagers();
         loadDepartments();
         getNextEmployeeId();
+        loadEmployees();
     });
 
     $('#addEmployeeButton').click(function () {
@@ -100,6 +104,7 @@
         $('#deleteEmployeeForm').show();
     });
 
+    // Query the database to find all managers when adding an employee.
     function loadManagers() {
         var query = "SELECT mgr.managerId, e.firstName, e.lastName FROM Manager mgr, Employee e WHERE mgr.employeeId = e.employeeId";
         // Ajax call to query database for all the manager information.
@@ -124,6 +129,7 @@
         });
     };
     
+    // Query the database to find all departments when adding an employee.
     function loadDepartments() {
         var query = "SELECT dept.deptName, dept.deptNum FROM salesdepartment dept";
         $.ajax({
@@ -146,6 +152,42 @@
         });
     };
 
+    // Query the database for all current employees to display a list of employee to delete
+    function loadEmployees() {
+        $('#employeeSelect').html("");
+        var query = "SELECT e.employeeId, e.firstName, e.lastName FROM employee e WHERE e.employeeId NOT IN (SELECT m.employeeId FROM manager m, employee e2 WHERE m.employeeId = e2.employeeId)";
+        $.ajax({
+            url: "/Home/SelectQuery",
+            type: "GET",
+            datatype: "json",
+            data: { query: query },
+            success: function (data) {
+                var response = JSON.parse(data);
+                $.each(response, function (index, element) {
+                    var employeeId = response[index]['employeeId'];
+                    var firstName = response[index]['firstName'];
+                    var lastName = response[index]['lastName'];
+                    var option = new Option(firstName + " " + lastName, employeeId);
+                    $('#employeeSelect').append($(option));
+                })
+            },
+            error: function (err) {
+
+            }
+        });
+    }
+
+    function clearInputs() {
+        $('#firstNameBox').val("");
+        $('#lastNameBox').val("");
+        $('#ssnBox').val("");
+        $('#salaryBox').val("");
+        $('#monthInput').val("");
+        $('#dayInput').val("");
+        $('#yearInput').val("");
+    }
+
+    // Query database to find unused ID when adding a new Employee
     function getNextEmployeeId() {
         var query = "SELECT (MAX(e.employeeId) + 1) as nextId FROM employee e";
         var nextId;
@@ -188,6 +230,7 @@
         return selectedDate;
     };
 
+    // Check if input is a valid number
     function isNumber(input) {
         if (isNaN(input) || input == "") {
             return false;
@@ -195,6 +238,7 @@
         return true;
     }
 
+    // Validate input for adding a new employee
     function validateInput(employeeId, hireDate, firstName, lastName, ssn, salary){
         if (hireDate == -1) {
             alert("Invalid date format, use MM/DD/YYY");
@@ -214,7 +258,7 @@
     }
 
     $('#addEmployeeSubmit').click(function () {
-
+        // Gather input data
         var date = getDate('#monthInput', '#dayInput', '#yearInput');
         var salary = $('#salaryBox').val();
         var ssn = $('#ssnBox').val();
@@ -224,19 +268,16 @@
         var deptName = $('#departmentSelect option:selected').text();
         var region = $('#regionSelect option:selected').text();
         var employeeId = $('#idBox').attr('value');
-        console.log(employeeId);
+        // Validate input
         validateInput(employeeId, date, firstName, lastName, ssn, salary);
         
+        // Construct query
         var insertEmployeeQuery = "insert into employee (employeeId, hireDate, firstName, lastName, ssn, salary) values (" + employeeId + ", '" + date + "', '" + firstName + "', '" + lastName + "', " + ssn + ", " + salary + ");";
-        console.log(insertEmployeeQuery);
-
         var insertManagesQuery = "insert into manages(managerId, employeeId) values (" + managerId + ", " + employeeId + ");";
-        console.log(insertManagesQuery);
-
         var insertMemberOfQuery = "insert into memberof(employeeId, deptName) values (" + employeeId + ", '" + deptName + "');";
-
         var query = insertEmployeeQuery + " " + insertManagesQuery + " " + insertMemberOfQuery;
 
+        // Perform ajax call to HomeController to insert new employee
         $.ajax({
             url: "/Home/InsertQuery",
             type: "POST",
@@ -244,7 +285,9 @@
             data: { query, query },
             success: function (data) {
                 if (data['result']) {
-                    console.log("Added!");
+                    alert("Employee added!");
+                    loadEmployees();
+                    clearInputs();
                 }
                 else {
                     console.log("Callback success, but not added.");
@@ -252,6 +295,29 @@
             },
             error: function (err) {
                 console.log("Not added!");
+            }
+        });
+    });
+
+    $('#deleteEmployeeSubmit').click(function () {
+        var employeeId = $('#employeeSelect option:selected').val();
+        var query = "DELETE FROM employee WHERE employeeId=" + employeeId + ";";
+        $.ajax({
+            url: "/Home/DeleteQuery",
+            type: "POST",
+            datatype: "json",
+            data: { query: query },
+            success: function (data) {
+                if (data['result']) {
+                    loadEmployees();
+                    alert("Employee has been deleted.");
+                }
+                else {
+                    alert("ERROR SUCCESS");
+                }
+            },
+            error: function (err) {
+                alsert("ERROR");
             }
         });
     });
