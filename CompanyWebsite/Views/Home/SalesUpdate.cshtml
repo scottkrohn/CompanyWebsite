@@ -86,7 +86,10 @@
                     var productName = response[index]['name'];
                     var sku = response[index]['sku'];
                     var optionName = "SKU " + sku + ":" + productName;
-                    var option = new Option(optionName, sku);
+                    var option = new Option(optionName, sku)
+                    if(response[index]['prodFlag'] == 'False'){
+                        $(option).css('color', 'darkred');
+                    } 
                     $('#productSelect').append($(option));
                 });
             },
