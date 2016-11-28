@@ -153,7 +153,7 @@
             selectQuery(query);
         }
         else {
-            var query = "SELECT s.employeeId, e.firstName, e.lastName, SUM(p.price * ps.quantity) AS totalSalesDollers FROM Salesman s, Initiates i, ProductSale ps, ContainsProd cp, Product p, Employee e WHERE s.employeeId = i.employeeId AND e.employeeId = i.employeeId AND i.id = ps.id AND ps.id = cp.id AND cp.sku = p.sku AND i.dt between '" + fromDate + "' AND '" + toDate + "' GROUP BY s.employeeId";
+            var query = "SELECT s.employeeId, e.firstName, e.lastName, SUM(p.price * ps.quantity) AS totalSalesDollars FROM Salesman s, Initiates i, ProductSale ps, ContainsProd cp, Product p, Employee e WHERE s.employeeId = i.employeeId AND e.employeeId = i.employeeId AND i.id = ps.id AND ps.id = cp.id AND cp.sku = p.sku AND i.dt between '" + fromDate + "' AND '" + toDate + "' GROUP BY s.employeeId";
             selectQuery(query);
         }
     });
@@ -165,7 +165,7 @@
             alert("Invalid input for dates, use format MM/DD/YYY");
             return;
         }
-        var query = "SELECT s.employeeId, e.firstName, e.lastName, SUM(p.price * ps.quantity) AS totalSalesDollers FROM Salesman s, Initiates i, ProductSale ps, ContainsProd cp, Product p, Employee e WHERE s.employeeId = i.employeeId AND e.employeeId = i.employeeId AND i.id = ps.id AND ps.id = cp.id AND cp.sku = p.sku AND i.dt BETWEEN '" + fromDate + "' AND '" + toDate + "' GROUP BY s.employeeId ORDER BY SUM(p.price * ps.quantity) desc limit 1"
+        var query = "SELECT s.employeeId, e.firstName, e.lastName, SUM(p.price * ps.quantity) AS totalSalesDollars FROM Salesman s, Initiates i, ProductSale ps, ContainsProd cp, Product p, Employee e WHERE s.employeeId = i.employeeId AND e.employeeId = i.employeeId AND i.id = ps.id AND ps.id = cp.id AND cp.sku = p.sku AND i.dt BETWEEN '" + fromDate + "' AND '" + toDate + "' GROUP BY s.employeeId ORDER BY SUM(p.price * ps.quantity) desc limit 1"
         selectQuery(query);
     });
 
